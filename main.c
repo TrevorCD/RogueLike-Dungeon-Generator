@@ -1,10 +1,17 @@
 /* Trevor Ben Calderwood
  * Roguelike tilemap generator prototype
  *
- * TODO:
- *   - Figure out why every room has no parent (must be forgetting to set the
- *     parent somewhere).
+ * Under GNU copyleft
  *
+ * TODO:
+ *   - Calculate size of each room post gen and collisions
+ *   - Delaunay triangulation of largest rooms
+ *   - MST using triangulation edges
+ *   - Connect rest of rooms
+ *   - Cellular automata for different tile types
+ *      - Ex. Grass, stone, water, etc...
+ *   - Sample perlin noise for tilemap variations
+ *      - Ex. Height of grass for smooth transitions
  */
 
 
