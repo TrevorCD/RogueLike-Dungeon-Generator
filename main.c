@@ -206,11 +206,7 @@ void collisionCheck( char ** board, Room * rooms, int n ) {
 
 double edgeLength( double x1, double y1, double x2, double y2 ) {
     double a = x1 - x2;
-    if( a < 0 )
-	a = a * -1;
     double b = y1 - y2;
-    if( b < 0 )
-	b = b * -1;
     return sqrt( (a*a) + (b*b) );
 }
 
