@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <math.h>
 
 // test values:
 
@@ -201,6 +202,52 @@ void collisionCheck( char ** board, Room * rooms, int n ) {
 	    
 	}// end for j loop	
     }// end for i loop
+}
+
+double edgeLength( double x1, double y1, double x2, double y2 ) {
+    double a = x1 - x2;
+    if( a < 0 )
+	a = a * -1;
+    double b = y1 - y2;
+    if( b < 0 )
+	b = b * -1;
+    return sqrt( (a*a) + (b*b) );
+}
+
+typedef struct Coordinate {
+
+    double x;
+    double y;
+    
+} coord;
+
+
+void circumcircleCenter( double x1, double y1, double x2, double y2, 
+			 double x3, double y3, coord * output ) {
+    
+    double x, y; // coordinates of circumcircle
+    double invSlope12, invSlope23;  // perpendicular slope to lines 1,2 and 2,3
+    coord midpoint12, midpoint23; // midpoints of lines 1,2 and 2,3
+    double b12, b23; // b in y = mx + b
+    
+    midpoint12.x = ( x1 + x2 ) / 2;
+    midpoint12.y = ( y1 + y2 ) / 2;
+    midpoint23.x = ( x2 + x3 ) / 2;
+    midpoint23.y = ( y2 + y3 ) / 2;
+
+    invSlope12 = -1 / (( y2 - y1 ) / ( x2 - x1 ));
+    invSlope23 = -1 / (( y3 - y2 ) / ( x3 - x2 ));
+
+    b12 = midpoint12.y - ( invSlope12 * midpoint12.x );
+    b23 = midpoint23.y - ( invSlope23 * midpoint23.x );
+
+    x = ( ( b23 - b12 ) * invSlope23 ) / invSlope12;
+    y = ( invSlope12 * x ) + b12;
+    
+    output->x = x;
+    output->y = y;
+    
+    return;
 }
 
 // debug function: draws each room's ID in center of room on board
