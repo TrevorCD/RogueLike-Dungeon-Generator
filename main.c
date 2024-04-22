@@ -4,7 +4,6 @@
  * Under GNU copyleft
  *
  * TODO:
- *   - Calculate size of each room post gen and collisions
  *   - Delaunay triangulation of largest rooms
  *   - MST using triangulation edges
  *   - Connect rest of rooms
@@ -71,10 +70,9 @@ typedef struct coordinate {
 
 typedef struct roomNodeContainer {
 
-    Room * room; // will be 0 for support nodes
+    Room * room; // support nodes have facade rooms w/ id -1
     struct roomNodeContainer * edges[4];
     int size;
-    int support; // 1 if support, 0 otherwise;
 
 } Node;
 
@@ -385,7 +383,7 @@ int main() {
 
     collisionCheck( board, roomList, NUMROOMS );
     
-    if( NUMROOMS < 36 ) // 0 through 9 and A through Z
+    if( NUMROOMS <= 36 ) // 0 through 9 and A through Z -> 36 chars
 	debug_drawRoomIds( board, roomList, NUMROOMS );
     
     printBoard( board );
@@ -403,7 +401,6 @@ int main() {
 	if( roomList[i].parent == 0 ) {
 	    roomsPostGen[nRoomsPostGen].room = &roomList[i];
 	    roomsPostGen[nRoomsPostGen].size = findTrueRoomSize( &roomList[i] );
-	    roomsPostGen[nRoomsPostGen].support = 0;
 	    nRoomsPostGen++;
 	}
     }
@@ -411,7 +408,8 @@ int main() {
     
     int nMainRooms = nRoomsPostGen / 2;
     int nSideRooms = nRoomsPostGen - nMainRooms;
-        
+    
+    // support node init
     // choose 3 points for a triangle that surrounds all points
     Node * supports = malloc( sizeof( Node ) * 3 );
     Room * facadeRooms = malloc( sizeof( Room ) * 3 );
