@@ -219,7 +219,7 @@ void collisionCheck( char ** board, Room * rooms, int n ) {
     }// end for i loop
 }
 
-double distance( double x1, double y1, double x2, double y2 ) {
+double calcLength( double x1, double y1, double x2, double y2 ) {
     double a = x1 - x2;
     double b = y1 - y2;
     return sqrt( (a*a) + (b*b) );
@@ -288,24 +288,25 @@ void delaunayTriangulation( Node * nodes, int n,
     Coord midpoint;
     double radius;
     double distance;
-    circumCircleCenter( (double) one->room.x, (double) one->room.y,
-			(double) two->room.x, (double) two->room.y,
-			(double) three->room.x, (double) three->room.y,
+    circumCircleCenter( (double) one->room->x, (double) one->room->y,
+			(double) two->room->x, (double) two->room->y,
+			(double) three->room->x, (double) three->room->y,
 			&midpoint );
-    radius = distance( (double) one->room.x, (double) one->room.y,
-		       (double) midpoint.x, (double) midpoint,y );
+    radius = calcLength( (double) one->room->x, (double) one->room->y,
+		       (double) midpoint.x, (double) midpoint.y );
     int id1 = one->room->id;
     int id2 = two->room->id;
     int id3 = three->room->id;
 
     Node * c;
     int id;
+    int i = 0;
     for( i = 0; i < n; i++ ) {
 	c = &nodes[i];
 	id = c->room->id;
 	if( ( id != id1 ) && ( id != id2 ) && ( id != id3 ) ) {
-	    distance = distance( (double) c->room.x, (double) c->room.y,
-				 (double) midpoint.x, (double) midpoint,y );
+	    distance = calcLength( (double) c->room->x, (double) c->room->y,
+				 (double) midpoint.x, (double) midpoint.y );
 	    if( distance > radius )
 		break;
 	}
