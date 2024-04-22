@@ -352,8 +352,9 @@ int main() {
     }
 
     collisionCheck( board, roomList, NUMROOMS );
-
-    debug_drawRoomIds( board, roomList, NUMROOMS );
+    
+    if( NUMROOMS < 36 ) // 0 through 9 and A through Z
+	debug_drawRoomIds( board, roomList, NUMROOMS );
     
     printBoard( board );
     // count true number of rooms
@@ -387,9 +388,16 @@ int main() {
     // choose 3 points for a triangle that surrounds all points
     Node * supports = malloc( sizeof( Node ) * 3 );
     supports[0].room = 0;
+    supports[0].coords.x = (double) ( 0 - ( TRUELEN / 2 ) );
+    supports[0].coords.y = 0;
+
     supports[1].room = 0;
+    supports[1].coords.x = (double) ( TRUELEN + ( TRUELEN / 2 ) );
+    supports[0].coords.y = 0;
+
     supports[2].room = 0;
-    // how tf calculate coords for support >:(
+    supports[0].coords.x = (double) TRUELEN / 2;
+    supports[0].coords.y = TRUEWID * 2;
 
     // delaunay triangulation of m rooms
     
