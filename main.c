@@ -62,12 +62,6 @@ typedef struct room {
     
 } Room;
 
-typedef struct edge {
-    
-    Room rooms[2];
-
-} Edge;
-
 typedef struct Coordinate {
 
     double x;
@@ -78,9 +72,9 @@ typedef struct Coordinate {
 typedef struct roomNodeContainer {
 
     Room * room; // will be 0 for support nodes
-    Edge edges[4];
-    int size;
+    struct roomNodeContainer * edges[4];
     coord coords; // only used for support nodes
+    int size;
 
 } Node;
 
@@ -375,12 +369,6 @@ int main() {
 	}
     }
     printf("Num rooms post generation and collision: %d\n", nRoomsPostGen );
-
-    /// DEBUG
-    end = clock();
-    cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("cpu time: %f\n", cpu_time );
-    /// DEBUG
     
     int nMainRooms = nRoomsPostGen / 2;
     int nSideRooms = nRoomsPostGen - nMainRooms;
@@ -390,14 +378,20 @@ int main() {
     supports[0].room = 0;
     supports[0].coords.x = (double) ( 0 - ( TRUELEN / 2 ) );
     supports[0].coords.y = 0;
+    supports[0].edges[0] = &supports[1];
+    supports[0].edges[1] = &supports[2];
 
     supports[1].room = 0;
     supports[1].coords.x = (double) ( TRUELEN + ( TRUELEN / 2 ) );
-    supports[0].coords.y = 0;
+    supports[1].coords.y = 0;
+    supports[1].edges[0] = &supports[2];
+    supports[1].edges[1] = &supports[0];
 
     supports[2].room = 0;
-    supports[0].coords.x = (double) TRUELEN / 2;
-    supports[0].coords.y = TRUEWID * 2;
+    supports[2].coords.x = (double) TRUELEN / 2;
+    supports[2].coords.y = TRUEWID * 2;
+    supports[2].edges[0] = &supports[0];
+    supports[2].edges[1] = &supports[1];
 
     // delaunay triangulation of m rooms
     
@@ -410,4 +404,13 @@ int main() {
     // nearest neighbors of m rooms added to tree
 
     // not sure what to do for remaining rooms
+
+
+
+    
+    /// DEBUG
+    end = clock();
+    cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("cpu time: %f\n", cpu_time );
+    /// DEBUG
 }
