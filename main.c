@@ -62,19 +62,19 @@ typedef struct room {
     
 } Room;
 
-typedef struct Coordinate {
+typedef struct coordinate {
 
     double x;
     double y;
     
-} coord;
+} Coord;
 
 typedef struct roomNodeContainer {
 
     Room * room; // will be 0 for support nodes
     struct roomNodeContainer * edges[4];
-    coord coords; // only used for support nodes
     int size;
+    int support; // 1 if support, 0 otherwise;
 
 } Node;
 
@@ -221,18 +221,18 @@ void collisionCheck( char ** board, Room * rooms, int n ) {
     }// end for i loop
 }
 
-double edgeLength( double x1, double y1, double x2, double y2 ) {
+double distance( double x1, double y1, double x2, double y2 ) {
     double a = x1 - x2;
     double b = y1 - y2;
     return sqrt( (a*a) + (b*b) );
 }
 
-void circumcircleCenter( double x1, double y1, double x2, double y2, 
-			 double x3, double y3, coord * output ) {
+void circumCircleCenter( double x1, double y1, double x2, double y2, 
+			 double x3, double y3, Coord * output ) {
     
     double x, y; // coordinates of circumcircle
     double invSlope12, invSlope23;  // perpendicular slope to lines 1,2 and 2,3
-    coord midpoint12, midpoint23; // midpoints of lines 1,2 and 2,3
+    Coord midpoint12, midpoint23; // midpoints of lines 1,2 and 2,3
     double b12, b23; // b in y = mx + b
     
     midpoint12.x = ( x1 + x2 ) / 2;
@@ -283,6 +283,44 @@ int findTrueRoomSize( Room * room ) {
 	size += ( room->w * room->l * 4 );
     }
     return size;
+}
+
+void delaunayTriangulation( Node * nodes, int n,
+			    Node * one, Node * two, Node * three ) {
+    Coord midpoint;
+    double radius;
+    double distance;
+    circumCircleCenter( (double) one->room.x, (double) one->room.y,
+			(double) two->room.x, (double) two->room.y,
+			(double) three->room.x, (double) three->room.y,
+			&midpoint );
+    radius = distance( (double) one->room.x, (double) one->room.y,
+		       (double) midpoint.x, (double) midpoint,y );
+    int id1 = one->room->id;
+    int id2 = two->room->id;
+    int id3 = three->room->id;
+
+    Node * c;
+    int id;
+    for( i = 0; i < n; i++ ) {
+	c = &nodes[i];
+	id = c->room->id;
+	if( ( id != id1 ) && ( id != id2 ) && ( id != id3 ) ) {
+	    distance = distance( (double) c->room.x, (double) c->room.y,
+				 (double) midpoint.x, (double) midpoint,y );
+	    if( distance > radius )
+		break;
+	}
+    }
+    if( i == n )
+	return;
+    // edging..?
+    
+    
+    // recurse
+    delaunayTriangulation( ... );
+    delaunayTriangulation( ... );
+    delaunayTriangulation( ... );
 }
 
 int main() {
@@ -365,6 +403,7 @@ int main() {
 	if( roomList[i].parent == 0 ) {
 	    roomsPostGen[nRoomsPostGen].room = &roomList[i];
 	    roomsPostGen[nRoomsPostGen].size = findTrueRoomSize( &roomList[i] );
+	    roomsPostGen[nRoomsPostGen].support = 0;
 	    nRoomsPostGen++;
 	}
     }
@@ -375,21 +414,25 @@ int main() {
         
     // choose 3 points for a triangle that surrounds all points
     Node * supports = malloc( sizeof( Node ) * 3 );
-    supports[0].room = 0;
-    supports[0].coords.x = (double) ( 0 - ( TRUELEN / 2 ) );
-    supports[0].coords.y = 0;
+    Room * facadeRooms = malloc( sizeof( Room ) * 3 );
+    facadeRooms[0].id = -1;
+    facadeRooms[0].x = ( 0 - ( TRUELEN / 2 ) );
+    facadeRooms[0].y = 0;
+    supports[0].room = &facadeRooms[0];
     supports[0].edges[0] = &supports[1];
     supports[0].edges[1] = &supports[2];
 
-    supports[1].room = 0;
-    supports[1].coords.x = (double) ( TRUELEN + ( TRUELEN / 2 ) );
-    supports[1].coords.y = 0;
+    facadeRooms[1].id = -1;
+    facadeRooms[1].x = ( TRUELEN + ( TRUELEN / 2 ) );
+    facadeRooms[1].y = 0;
+    supports[1].room = &facadeRooms[1];
     supports[1].edges[0] = &supports[2];
     supports[1].edges[1] = &supports[0];
 
-    supports[2].room = 0;
-    supports[2].coords.x = (double) TRUELEN / 2;
-    supports[2].coords.y = TRUEWID * 2;
+    facadeRooms[2].id = -1;
+    facadeRooms[2].x = TRUELEN / 2;
+    facadeRooms[2].y = TRUEWID * 2;
+    supports[2].room = &facadeRooms[2];
     supports[2].edges[0] = &supports[0];
     supports[2].edges[1] = &supports[1];
 
