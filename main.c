@@ -62,6 +62,21 @@ typedef struct room {
     
 } Room;
 
+typedef struct edge {
+    
+    Room rooms[2];
+
+} Edge;
+
+typedef struct roomNodeContainer {
+
+    Room * room;
+    Edge edges[4];
+    int size;
+
+} Node;
+
+
 void _drawRoom( char ** board , Room * room ) {
     
     //printf("%d, %d\n", room->y, room->x );
@@ -264,7 +279,17 @@ void debug_drawRoomIds( char ** board, Room * rooms, int n ) {
     }
     
 }
-
+int findTrueRoomSize( Room * room ) {
+    
+    int size = room->w * room->l * 4;
+    // Rudimentary calculation. Does not take into account overlap between rooms
+    // Should be good enough for this
+    while( room->child ) {
+	room = room->child;
+	size += ( room->w * room->l * 4 );
+    }
+    return size;
+}
 
 int main() {
 
@@ -272,7 +297,7 @@ int main() {
     clock_t start, end;
     double cpu_time;
     start = clock();
-    ///DEBUG
+    /// DEBUG
     
     system("clear");
     
@@ -328,28 +353,26 @@ int main() {
 
     collisionCheck( board, roomList, NUMROOMS );
 
-    //debug_drawRoomIds( board, roomList, NUMROOMS );
+    debug_drawRoomIds( board, roomList, NUMROOMS );
     
     printBoard( board );
     
     int nRoomsPostGen = 0;
-
-    
     for( int i = NUMROOMS - 1; i >= 0; i-- ) {
 	if( roomList[i].parent == 0 ) {
 	    nRoomsPostGen++;
 	}
     }
-    Room * roomsPostGen[nRoomsPostGen];
-    nRoomsPostGen = 0;;
+    Node * roomsPostGen = malloc( sizeof( Node ) * nRoomsPostGen );
+    nRoomsPostGen = 0;
 	    
     for( int i = NUMROOMS - 1; i >= 0; i-- ) {
 	if( roomList[i].parent == 0 ) {
-	    roomsPostGen[nRoomsPostGen] = &roomList[i];
+	    roomsPostGen[nRoomsPostGen].room = &roomList[i];
+	    roomsPostGen[nRoomsPostGen].size = findTrueRoomSize( &roomList[i] );
 	    nRoomsPostGen++;
 	}
     }
-    
     printf("Num rooms post generation and collision: %d\n", nRoomsPostGen );
 
     /// DEBUG
@@ -357,18 +380,13 @@ int main() {
     cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("cpu time: %f\n", cpu_time );
     /// DEBUG
-
-    /*
-      int nMainRooms = nRoomsPostGen / 2;
-      int nSideRooms = nRoomsPostGen - nMainRooms;
-      Room * mainRooms[ nMainRooms ];
-      Room * sideRooms[ nSideRooms ];
-
-      Room * connectedRooms = malloc( sizeof( Room * ) * nRoomsPostGen );
-     */
+    
+    int nMainRooms = nRoomsPostGen / 2;
+    int nSideRooms = nRoomsPostGen - nMainRooms;
+        
     // Find the m largest rooms in r rooms
     // m = (n / 2 ) ?
-
+    
     // delaunay triangulation of m rooms
     
     // MST of m rooms' edges
