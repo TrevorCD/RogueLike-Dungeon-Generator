@@ -68,11 +68,19 @@ typedef struct edge {
 
 } Edge;
 
+typedef struct Coordinate {
+
+    double x;
+    double y;
+    
+} coord;
+
 typedef struct roomNodeContainer {
 
-    Room * room;
+    Room * room; // will be 0 for support nodes
     Edge edges[4];
     int size;
+    coord coords; // only used for support nodes
 
 } Node;
 
@@ -225,14 +233,6 @@ double edgeLength( double x1, double y1, double x2, double y2 ) {
     return sqrt( (a*a) + (b*b) );
 }
 
-typedef struct Coordinate {
-
-    double x;
-    double y;
-    
-} coord;
-
-
 void circumcircleCenter( double x1, double y1, double x2, double y2, 
 			 double x3, double y3, coord * output ) {
     
@@ -356,7 +356,7 @@ int main() {
     debug_drawRoomIds( board, roomList, NUMROOMS );
     
     printBoard( board );
-    
+    // count true number of rooms
     int nRoomsPostGen = 0;
     for( int i = NUMROOMS - 1; i >= 0; i-- ) {
 	if( roomList[i].parent == 0 ) {
@@ -365,7 +365,7 @@ int main() {
     }
     Node * roomsPostGen = malloc( sizeof( Node ) * nRoomsPostGen );
     nRoomsPostGen = 0;
-	    
+    // insert rooms and their sizes into node array
     for( int i = NUMROOMS - 1; i >= 0; i-- ) {
 	if( roomList[i].parent == 0 ) {
 	    roomsPostGen[nRoomsPostGen].room = &roomList[i];
@@ -384,9 +384,13 @@ int main() {
     int nMainRooms = nRoomsPostGen / 2;
     int nSideRooms = nRoomsPostGen - nMainRooms;
         
-    // Find the m largest rooms in r rooms
-    // m = (n / 2 ) ?
-    
+    // choose 3 points for a triangle that surrounds all points
+    Node * supports = malloc( sizeof( Node ) * 3 );
+    supports[0].room = 0;
+    supports[1].room = 0;
+    supports[2].room = 0;
+    // how tf calculate coords for support >:(
+
     // delaunay triangulation of m rooms
     
     // MST of m rooms' edges
