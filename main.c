@@ -20,62 +20,7 @@
 #include <time.h>
 #include <math.h>
 
-// test values:
-
-#define TRUELEN 150
-#define TRUEWID 50
-#define NUMROOMS 25
-
-
-// stress test values
-/*
-#define TRUELEN 700
-#define TRUEWID 200
-#define NUMROOMS 500
-*/
-
-#define MAX_W 10
-#define MAX_L 10
-#define MIN_W 3
-#define MIN_L 3
-
-// DO NOT CHANGE THESE
-#define TRUESIZE ( TRUELEN * TRUEWID )
-#define MAX_X ( TRUELEN - ( MAX_W + 1 ) )
-#define MAX_Y ( TRUEWID - ( MAX_L + 1 ) )
-#define MIN_X ( MAX_L + 1 )
-#define MIN_Y ( MAX_L + 1 )
-
-
-typedef struct room {
-
-    struct room * parent; //
-    struct room * child;  // for linked list
-    
-    int l;         // length across x dimension
-    int w;         // width across y dimension
-    int x;         // horizontal dimension, grows right
-    int y;         // vertical dimension, grows down
-    
-    char id;       //initial gen room id, index of roomList in main
-    
-} Room;
-
-typedef struct coordinate {
-
-    double x;
-    double y;
-    
-} Coord;
-
-typedef struct roomNodeContainer {
-
-    Room * room; // support nodes have facade rooms w/ id -1
-    struct roomNodeContainer * edges[4];
-    int size;
-
-} Node;
-
+#include "defns.h"
 
 void _drawRoom( char ** board , Room * room ) {
     
@@ -301,7 +246,7 @@ void delaunayTriangulation( Node * nodes, int n,
     Node * c;
     int id;
     int i = 0;
-    for( i = 0; i < n; i++ ) {
+    for( ; i < n; i++ ) {
 	c = &nodes[i];
 	id = c->room->id;
 	if( ( id != id1 ) && ( id != id2 ) && ( id != id3 ) ) {
@@ -317,9 +262,10 @@ void delaunayTriangulation( Node * nodes, int n,
     
     
     // recurse
-    delaunayTriangulation( ... );
-    delaunayTriangulation( ... );
-    delaunayTriangulation( ... );
+    // this is probably wrong vvv
+    delaunayTriangulation( nodes, n, one, two, c     );
+    delaunayTriangulation( nodes, n, one, c,   three );
+    delaunayTriangulation( nodes, n, c,   two, three );
 }
 
 int main() {
