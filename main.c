@@ -24,8 +24,6 @@
 
 void _drawRoom( char ** board , Room * room ) {
     
-    //printf("%d, %d\n", room->y, room->x );
-    
     int startx = ( room->x - room->w );
     int endx = ( room->x + room->w  );
     int starty = ( room->y - room->l );
@@ -61,18 +59,14 @@ void _drawRoom( char ** board , Room * room ) {
 }
 
 void printBoard( char ** board ) {
-
     for( int i = 0; i < TRUEWID; i++ ) {
 	printf( board[i]);
-
 	printf("\n");
     }
-
 }
 
 // Given lists r1 and r2, combine both into one sorted list
 // Preconditions:
-//  - (r1->id) < (r2->id)
 //  - r1 and r2 are both sorted ( lowest at root )
 void listZipper( Room * r1, Room * r2 ) {
 
@@ -110,7 +104,7 @@ void listZipper( Room * r1, Room * r2 ) {
     return;
 }
 
-void collisionCheck( char ** board, Room * rooms, int n ) {
+void collisionCheck( char ** board, Room * rooms, int nRooms ) {
 
     char xCol;
     char yCol;
@@ -120,12 +114,12 @@ void collisionCheck( char ** board, Room * rooms, int n ) {
 
     int r1x, r1y, r1w, r1l, r2x, r2y, r2w, r2l;
     
-    for( int i = 0; i < n; i++ ) {
+    for( int i = 0; i < nRooms; i++ ) {
 	
 	r1 = &rooms[i];
 	r1x = r1->x; r1y = r1->y; r1w = r1->w; r1l = r1->l;
 	
-	for( int j = i + 1; j < n; j++ ) {
+	for( int j = i + 1; j < nRooms; j++ ) {
 	    
 	    r2 = &rooms[j];
 	    r2x = r2->x; r2y = r2->y; r2w = r2->w; r2l = r2->l;
@@ -170,12 +164,14 @@ double calcLength( double x1, double y1, double x2, double y2 ) {
     return sqrt( (a*a) + (b*b) );
 }
 
+// finds the center point of the circumcircle of the triangle the 3 input
+// vertices create.
 void circumCircleCenter( double x1, double y1, double x2, double y2, 
 			 double x3, double y3, Coord * output ) {
     
     double x, y; // coordinates of circumcircle
-    double invSlope12, invSlope23;  // perpendicular slope to lines 1,2 and 2,3
-    Coord midpoint12, midpoint23; // midpoints of lines 1,2 and 2,3
+    double invSlope12, invSlope23; // perpendicular slope to lines 1,2 and 2,3
+    Coord midpoint12, midpoint23;
     double b12, b23; // b in y = mx + b
     
     midpoint12.x = ( x1 + x2 ) / 2;
@@ -216,11 +212,11 @@ void debug_drawRoomIds( char ** board, Room * rooms, int n ) {
     }
     
 }
+
+// Rudimentary calculation. Does not take into account overlap between rooms
+// Summation of all room sizes in list
 int findTrueRoomSize( Room * room ) {
-    
     int size = room->w * room->l * 4;
-    // Rudimentary calculation. Does not take into account overlap between rooms
-    // Should be good enough for this
     while( room->child ) {
 	room = room->child;
 	size += ( room->w * room->l * 4 );
