@@ -18,4 +18,4 @@ Know Issues:
 			 ....#
 			 ....#
 
-       are counted as an intersection, but is not traversable
+       are counted as an intersection, but are not traversable
