@@ -8,3 +8,14 @@ Should compile on linux with 'make'
 No additional dependencies
 
 Know Issues:
+
+     - Rooms that intersect with wall corners over 1 floor each, like this:
+
+       	     	  	    #....
+			    #....
+			 ####....
+			 ....####
+			 ....#
+			 ....#
+
+       are counted as an intersection, but is not traversable
