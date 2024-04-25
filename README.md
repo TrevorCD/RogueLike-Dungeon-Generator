@@ -18,4 +18,4 @@ Know Issues:
 			 ....#
 			 ....#
 
-       are counted as a collision, but are not traversable
+       are counted as collisions, but are not traversable
