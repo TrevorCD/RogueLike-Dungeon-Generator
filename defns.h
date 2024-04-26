@@ -63,7 +63,7 @@ typedef struct roomNodeContainer {
 
 typedef struct triangle {
     Node * nodes[3];
-    coord center;
+    Coord center;
     double radius;
 } Tri;
 

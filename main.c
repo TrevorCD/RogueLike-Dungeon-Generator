@@ -262,7 +262,7 @@ Tri * newTri( Node * one, Node * two, Node * three ) {
     tri->nodes[2] = two;
     circumCircleCenter(one->room, two->room, three->room, &tri->center );
     tri->radius = calcLength( one->room->x, one->room->y,
-			      tri->center->x, tri->center->y );
+			      tri->center.x, tri->center.y );
     return tri;
 }
 
