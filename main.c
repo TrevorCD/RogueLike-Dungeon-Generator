@@ -14,6 +14,8 @@
  *      - Ex. Grass, stone, water, etc...
  *   - Sample perlin noise for tilemap variations
  *      - Ex. Height of grass for smooth transitions
+ *   - Refactor code in main.c
+ *     - separate c and h file for boards, triangles/triangulation, and rooms
  */
 
 
@@ -81,7 +83,6 @@ void listZipper( Room * r1, Room * r2 ) {
 	r1 = r1->parent;
     
     Room * tempChild;
-    Room * tempRoom;
        
     while( r2 != 0 ) {
 
@@ -133,15 +134,17 @@ void collisionCheck( char ** board, Room * rooms, int nRooms ) {
 	    if( r1x < r2x ) { //check RHS of r1 for collision
 		if( r1x + r1w > r2x - r2w ) {
 		    xCol = 1;
-		    if( r1x + r1w == ( r2x - r2w1 ) + 1 )
-			xCorner = 1; printf("xCorner!\n");
+		    if( r1x + r1w == ( r2x - r2w ) + 1 ) {
+			xCorner = 1;
+			printf("xCorner %d %d!\n", r1->id, r2->id); }
 		}
 	    }
 	    else if( r1x > r2x ) { //case 1: check LHS of r1 for collision
 		if( r1x - r1w < r2x + r2w ) {
 		    xCol = 1;
-		    if( (r1x - r1w) + 1 == r2x + r2w )
-			xCorner = 1; printf("xCorner!\n");
+		    if( (r1x - r1w) + 1 == r2x + r2w ) {
+			xCorner = 1;
+			printf("xCorner %d %d!\n", r1->id, r2->id); }
 		}
 	    }
 	    else //case 2: r1x == r2x
@@ -152,15 +155,17 @@ void collisionCheck( char ** board, Room * rooms, int nRooms ) {
 	    if( r1y < r2y ) { //check bottom of r1 for collision
 		if( r1y + r1l > r2y - r2l ) {
 		    yCol = 1;
-		    if( r1y + r1l == (r2y - r2l ) + 1 )
-			yCorner = 1; printf("yCorner!\n");
+		    if( r1y + r1l == (r2y - r2l ) + 1 ) {
+			yCorner = 1;
+			printf("yCorner %d %d!\n", r1->id, r2->id);}
 		}
 	    }
 	    else if( r1y > r2y ) { //case 1: check top of r1 for collision
 		if( r1y - r1l < r2y + r2l ) {
 		    yCol = 1;
-		    if( ( r1y - r1l) + 1 == r2y + r2l )
-			yCorner = 1; printf("yCorner!\n");
+		    if( ( r1y - r1l) + 1 == r2y + r2l ) {
+			yCorner = 1;
+			printf("yCorner %d %d!\n", r1->id, r2->id );}
 		}
 	    }
 	    else //case 2: r1y == r2y
@@ -185,9 +190,16 @@ double calcLength( double x1, double y1, double x2, double y2 ) {
 
 // finds the center point of the circumcircle of the triangle the 3 input
 // vertices create.
-void circumCircleCenter( double x1, double y1, double x2, double y2, 
-			 double x3, double y3, Coord * output ) {
+void circumCircleCenter(Room * one, Room * two, Room * three, Coord * output ) {
     
+    double x1 = one->x;
+    double y1 = one->y;
+    double x2 = two->x;
+    double y2 = two->y;
+    double x3 = three->x;
+    double y3 = three->y;
+
+
     double x, y; // coordinates of circumcircle
     double invSlope12, invSlope23; // perpendicular slope to lines 1,2 and 2,3
     Coord midpoint12, midpoint23;
@@ -243,22 +255,20 @@ int findTrueRoomSize( Room * room ) {
     return size;
 }
 
-void addEdge( Node * a, Node * b ) {
-    
-    Node * edge;
+Tri * newTri( Node * one, Node * two, Node * three ) {
+    Tri * tri = malloc( sizeof( Tri ) );
+    tri->nodes[0] = one;
+    tri->nodes[1] = two;
+    tri->nodes[2] = two;
+    circumCircleCenter(one->room, two->room, three->room, &tri->center );
+    tri->radius = calcLength( one->room->x, one->room->y,
+			      tri->center->x, tri->center->y );
+    return tri;
+}
 
-    int i = 0;
-    while( ( edge = a->edges[i] ) != 0 ) i++;
-    if( i >= NUMEDGES )
-	printf("AAA FUCK! NO EDGES LEFT!");
-    else
-	a->edges[i] = b;
-    i = 0;
-    while( ( edge = b->edges[i] ) != 0 ) i++;
-    if( i >= NUMEDGES )
-	printf("AAA FUCK! NO EDGES LEFT!");
-    else
-	b->edges[i] = a;
+void delTri( Tri * tri ) {
+    free( tri );
+    return;
 }
 
 void delaunayTriangulation( Node * nodes, int n,
@@ -266,10 +276,7 @@ void delaunayTriangulation( Node * nodes, int n,
     Coord midpoint;
     double radius;
     double distance;
-    circumCircleCenter( (double) one->room->x, (double) one->room->y,
-			(double) two->room->x, (double) two->room->y,
-			(double) three->room->x, (double) three->room->y,
-			&midpoint );
+    circumCircleCenter( one->room, two->room, three->room, &midpoint );
     radius = calcLength( (double) one->room->x, (double) one->room->y,
 		       (double) midpoint.x, (double) midpoint.y );
     int id1 = one->room->id;
@@ -291,16 +298,7 @@ void delaunayTriangulation( Node * nodes, int n,
     }
     if( i == n )
 	return;
-    // edging..?
-    addEdge( one, c );
-    addEdge( two, c );
-    addEdge( three, c );
-    
-    // recurse
-    // this is probably wrong vvv
-    delaunayTriangulation( nodes, n, one, two, c     );
-    delaunayTriangulation( nodes, n, one, c,   three );
-    delaunayTriangulation( nodes, n, c,   two, three );
+
 }
 
 int main() {
@@ -399,23 +397,18 @@ int main() {
     facadeRooms[0].x = ( 0 - ( TRUELEN / 2 ) );
     facadeRooms[0].y = 0;
     supports[0].room = &facadeRooms[0];
-    supports[0].edges[0] = &supports[1];
-    supports[0].edges[1] = &supports[2];
 
     facadeRooms[1].id = -1;
     facadeRooms[1].x = ( TRUELEN + ( TRUELEN / 2 ) );
     facadeRooms[1].y = 0;
     supports[1].room = &facadeRooms[1];
-    supports[1].edges[0] = &supports[2];
-    supports[1].edges[1] = &supports[0];
 
     facadeRooms[2].id = -1;
     facadeRooms[2].x = TRUELEN / 2;
     facadeRooms[2].y = TRUEWID * 2;
     supports[2].room = &facadeRooms[2];
-    supports[2].edges[0] = &supports[0];
-    supports[2].edges[1] = &supports[1];
-
+    
+    
     // delaunay triangulation of m rooms
     
     // MST of m rooms' edges
