@@ -1,2 +1,2 @@
-roguegame: main.o defns.h
-	gcc -g -Wall -lm -o roguetest main.o defns.h
+roguegame: main.c defns.h
+	gcc -g -Wall -lm -o roguetest main.c defns.h
