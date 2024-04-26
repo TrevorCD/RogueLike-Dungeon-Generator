@@ -7,18 +7,18 @@
 #ifndef DEFNS_H
 #define DEFNS_H
 // test values:
-
+/*
 #define TRUELEN 150
 #define TRUEWID 50
 #define NUMROOMS 25
-
+*/
 
 // stress test values
-/*
+
 #define TRUELEN 700
 #define TRUEWID 200
 #define NUMROOMS 500
-*/
+
 
 #define MAX_W 10
 #define MAX_L 10
