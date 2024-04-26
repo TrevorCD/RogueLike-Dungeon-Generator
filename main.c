@@ -4,6 +4,9 @@
  * Under GNU copyleft
  *
  * TODO:
+ *   - Finish implementing edge case logic for corner case in collision checker
+ *           PRIORITY 1 ^^^
+ *
  *   - Delaunay triangulation of largest rooms
  *   - MST using triangulation edges
  *   - Connect rest of rooms
@@ -113,7 +116,8 @@ void collisionCheck( char ** board, Room * rooms, int nRooms ) {
     Room * r2;
 
     int r1x, r1y, r1w, r1l, r2x, r2y, r2w, r2l;
-    
+    int xCorner, yCorner; // for literal edge case
+
     for( int i = 0; i < nRooms; i++ ) {
 	
 	r1 = &rooms[i];
@@ -123,16 +127,22 @@ void collisionCheck( char ** board, Room * rooms, int nRooms ) {
 	    
 	    r2 = &rooms[j];
 	    r2x = r2->x; r2y = r2->y; r2w = r2->w; r2l = r2->l;
-	    xCol = 0; yCol = 0;
+	    xCol = 0; yCol = 0; xCorner = 0; yCorner = 0;
 
 	    // x collisions
 	    if( r1x < r2x ) { //check RHS of r1 for collision
-		if( r1x + r1w > r2x - r2w )
+		if( r1x + r1w > r2x - r2w ) {
 		    xCol = 1;
+		    if( r1x + r1w == ( r2x - r2w1 ) + 1 )
+			xCorner = 1; printf("xCorner!\n");
+		}
 	    }
 	    else if( r1x > r2x ) { //case 1: check LHS of r1 for collision
-		if( r1x - r1w < r2x + r2w )
+		if( r1x - r1w < r2x + r2w ) {
 		    xCol = 1;
+		    if( (r1x - r1w) + 1 == r2x + r2w )
+			xCorner = 1; printf("xCorner!\n");
+		}
 	    }
 	    else //case 2: r1x == r2x
 		xCol = 1;
@@ -140,20 +150,29 @@ void collisionCheck( char ** board, Room * rooms, int nRooms ) {
 	    
 	    // y collisions
 	    if( r1y < r2y ) { //check bottom of r1 for collision
-		if( r1y + r1l > r2y - r2l )
+		if( r1y + r1l > r2y - r2l ) {
 		    yCol = 1;
+		    if( r1y + r1l == (r2y - r2l ) + 1 )
+			yCorner = 1; printf("yCorner!\n");
+		}
 	    }
 	    else if( r1y > r2y ) { //case 1: check top of r1 for collision
-		if( r1y - r1l < r2y + r2l )
+		if( r1y - r1l < r2y + r2l ) {
 		    yCol = 1;
+		    if( ( r1y - r1l) + 1 == r2y + r2l )
+			yCorner = 1; printf("yCorner!\n");
+		}
 	    }
 	    else //case 2: r1y == r2y
 		yCol = 1;
 
 	    
-	    if( yCol && xCol )
+	    if( yCol && xCol ) {
+		if( xCorner && yCorner ) {
+		    // IMPLEMENT HERE
+		}
 		listZipper( r1, r2 );
-	    
+	    }
 	}// end for j loop	
     }// end for i loop
 }
@@ -226,18 +245,17 @@ int findTrueRoomSize( Room * room ) {
 
 void addEdge( Node * a, Node * b ) {
     
-    int numEdges = 4;
     Node * edge;
 
     int i = 0;
     while( ( edge = a->edges[i] ) != 0 ) i++;
-    if( i >= numEdges )
+    if( i >= NUMEDGES )
 	printf("AAA FUCK! NO EDGES LEFT!");
     else
 	a->edges[i] = b;
     i = 0;
     while( ( edge = b->edges[i] ) != 0 ) i++;
-    if( i >= numEdges )
+    if( i >= NUMEDGES )
 	printf("AAA FUCK! NO EDGES LEFT!");
     else
 	b->edges[i] = a;
