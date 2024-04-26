@@ -54,10 +54,12 @@ typedef struct coordinate {
     
 } Coord;
 
+#define NUMEDGES 10 //might be overkill
+
 typedef struct roomNodeContainer {
 
     Room * room; // support nodes have facade rooms w/ id -1
-    struct roomNodeContainer * edges[4];
+    struct roomNodeContainer * edges[NUMEDGES];
     int size;
 
 } Node;
