@@ -7,18 +7,18 @@
 #ifndef DEFNS_H
 #define DEFNS_H
 // test values:
-/*
+
 #define TRUELEN 150
 #define TRUEWID 50
 #define NUMROOMS 25
-*/
+
 
 // stress test values
-
+/*
 #define TRUELEN 700
 #define TRUEWID 200
 #define NUMROOMS 500
-
+*/
 
 #define MAX_W 10
 #define MAX_L 10
@@ -54,14 +54,17 @@ typedef struct coordinate {
     
 } Coord;
 
-#define NUMEDGES 10 //might be overkill
-
 typedef struct roomNodeContainer {
 
     Room * room; // support nodes have facade rooms w/ id -1
-    struct roomNodeContainer * edges[NUMEDGES];
     int size;
 
 } Node;
+
+typedef struct triangle {
+    Node * nodes[3];
+    coord center;
+    double radius;
+} Tri;
 
 #endif // DEFNS_H
