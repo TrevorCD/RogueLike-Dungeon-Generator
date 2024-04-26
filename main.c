@@ -224,6 +224,25 @@ int findTrueRoomSize( Room * room ) {
     return size;
 }
 
+void addEdge( Node * a, Node * b ) {
+    
+    int numEdges = 4;
+    Node * edge;
+
+    int i = 0;
+    while( ( edge = a->edges[i] ) != 0 ) i++;
+    if( i >= numEdges )
+	printf("AAA FUCK! NO EDGES LEFT!");
+    else
+	a->edges[i] = b;
+    i = 0;
+    while( ( edge = b->edges[i] ) != 0 ) i++;
+    if( i >= numEdges )
+	printf("AAA FUCK! NO EDGES LEFT!");
+    else
+	b->edges[i] = a;
+}
+
 void delaunayTriangulation( Node * nodes, int n,
 			    Node * one, Node * two, Node * three ) {
     Coord midpoint;
@@ -255,7 +274,9 @@ void delaunayTriangulation( Node * nodes, int n,
     if( i == n )
 	return;
     // edging..?
-    
+    addEdge( one, c );
+    addEdge( two, c );
+    addEdge( three, c );
     
     // recurse
     // this is probably wrong vvv
