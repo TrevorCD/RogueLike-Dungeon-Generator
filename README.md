@@ -7,6 +7,7 @@ Should compile on linux with 'make'
 
 Dependencies:
 	- gcc
+
 Know Issues:
 
      - Rooms that intersect with wall corners over 1 floor each, like this:
