@@ -5,8 +5,6 @@
  *
  * TODO:
  *   - Finish implementing edge case logic for corner case in collision checker
- *           PRIORITY 1 ^^^
- *
  *   - Delaunay triangulation of largest rooms
  *   - MST using triangulation edges
  *   - Connect rest of rooms
@@ -182,7 +180,7 @@ void collisionCheck( char ** board, Room * rooms, int nRooms ) {
     }// end for i loop
 }
 
-double calcLength( double x1, double y1, double x2, double y2 ) {
+double length( double x1, double y1, double x2, double y2 ) {
     double a = x1 - x2;
     double b = y1 - y2;
     return sqrt( (a*a) + (b*b) );
@@ -255,50 +253,98 @@ int findTrueRoomSize( Room * room ) {
     return size;
 }
 
+// given 3 nodes, init triangle defined by them. Also calcualtes circumcircle
+// center and circumcircle radius
 Tri * newTri( Node * one, Node * two, Node * three ) {
     Tri * tri = malloc( sizeof( Tri ) );
     tri->nodes[0] = one;
     tri->nodes[1] = two;
     tri->nodes[2] = two;
     circumCircleCenter(one->room, two->room, three->room, &tri->center );
-    tri->radius = calcLength( one->room->x, one->room->y,
-			      tri->center.x, tri->center.y );
+    tri->radius = length( one->room->x, one->room->y,
+			  tri->center.x, tri->center.y );
     return tri;
 }
 
+// deallocation of tri struct
 void delTri( Tri * tri ) {
     free( tri );
     return;
 }
 
-void delaunayTriangulation( Node * nodes, int n,
+void delaunayTriangulation( Node * nodes, int nNodes,
 			    Node * one, Node * two, Node * three ) {
-    Coord midpoint;
-    double radius;
+    Tri * tris[nNodes];
+    int i;
+    for( i = 1; i < nNodes; i++ )
+	tris[i] = 0;
+    // init support tri
+    Node * supports = malloc( sizeof( Node ) * 3 );
+    Room * facadeRooms = malloc( sizeof( Room ) * 3 );
+    facadeRooms[0].id = -1;
+    facadeRooms[0].x = ( 0 - ( TRUELEN / 2 ) );
+    facadeRooms[0].y = 0;
+    supports[0].room = &facadeRooms[0];
+
+    facadeRooms[1].id = -1;
+    facadeRooms[1].x = ( TRUELEN + ( TRUELEN / 2 ) );
+    facadeRooms[1].y = 0;
+    supports[1].room = &facadeRooms[1];
+
+    facadeRooms[2].id = -1;
+    facadeRooms[2].x = TRUELEN / 2;
+    facadeRooms[2].y = TRUEWID * 2;
+    supports[2].room = &facadeRooms[2];
+    
+    tris[0] = newTri( &supports[0], &supports[1], &supports[2] );
+    int nTris = 1;
+
+    char hits[nNodes]; // keeps track of collisions for each nx iteration
+    for( i = 0; i < nNodes; i++ )
+	hits[i] = 0;
+    
+    Node * point;
+    Tri * t;
     double distance;
-    circumCircleCenter( one->room, two->room, three->room, &midpoint );
-    radius = calcLength( (double) one->room->x, (double) one->room->y,
-		       (double) midpoint.x, (double) midpoint.y );
-    int id1 = one->room->id;
-    int id2 = two->room->id;
-    int id3 = three->room->id;
+    Room * room;
 
-    Node * c;
-    int id;
-    int i = 0;
-    for( ; i < n; i++ ) {
-	c = &nodes[i];
-	id = c->room->id;
-	if( ( id != id1 ) && ( id != id2 ) && ( id != id3 ) ) {
-	    distance = calcLength( (double) c->room->x, (double) c->room->y,
-				 (double) midpoint.x, (double) midpoint.y );
-	    if( distance > radius )
-		break;
+    int nx, tx, tax, nHits;
+    for( nx = 0; nx < nNodes; nx++ ) {
+	point = &nodes[nx];
+	room = point->room;
+	// identify which tris' circumcircles contain this point
+	// tx is the index of the actual tri. tax is the index into the array
+	// where that tri * exists. This way I don't have to use linked lists
+	// or shift elements in the array
+	tx = 0; tax = 0; nHits = 0;
+	while( tx < nTris)  {
+	    if( tris[tax] != 0 ) {
+		tx++;
+		t = tris[tax];
+		distance = length( room->x, room->y, t->center.x, t->center.y );
+		// may need an epsilon here to ignore points in the tri
+		if( distance < t->radius ) { //hit!
+		    hits[tax] = 1;
+		    nHits++;
+		}
+		if( nHits ) {
+		    // retriangulation
+
+		    // STOPPED WORKING HERE ------------------------------------
+		    
+
+		    //
+		}
+	    }
+	    tax++;
+	    /// TEMP DEBUG PRINT
+	    if( tax == nNodes ) {printf("TRI BUFF OVERFLOW!!!\n"); exit(0);}
 	}
+	// restructure triangles
     }
-    if( i == n )
-	return;
+    // destroy any triangles that have a support node
 
+    free( supports ); free( facadeRooms );
 }
 
 int main() {
@@ -391,22 +437,6 @@ int main() {
     
     // support node init
     // choose 3 points for a triangle that surrounds all points
-    Node * supports = malloc( sizeof( Node ) * 3 );
-    Room * facadeRooms = malloc( sizeof( Room ) * 3 );
-    facadeRooms[0].id = -1;
-    facadeRooms[0].x = ( 0 - ( TRUELEN / 2 ) );
-    facadeRooms[0].y = 0;
-    supports[0].room = &facadeRooms[0];
-
-    facadeRooms[1].id = -1;
-    facadeRooms[1].x = ( TRUELEN + ( TRUELEN / 2 ) );
-    facadeRooms[1].y = 0;
-    supports[1].room = &facadeRooms[1];
-
-    facadeRooms[2].id = -1;
-    facadeRooms[2].x = TRUELEN / 2;
-    facadeRooms[2].y = TRUEWID * 2;
-    supports[2].room = &facadeRooms[2];
     
     
     // delaunay triangulation of m rooms
