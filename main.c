@@ -2,18 +2,6 @@
  * Roguelike tilemap generator prototype
  *
  * Under GNU copyleft
- *
- * TODO:
- *   - Finish implementing edge case logic for corner case in collision checker
- *   - Delaunay triangulation of largest rooms
- *   - MST using triangulation edges
- *   - Connect rest of rooms
- *   - Cellular automata for different tile types
- *      - Ex. Grass, stone, water, etc...
- *   - Sample perlin noise for tilemap variations
- *      - Ex. Height of grass for smooth transitions
- *   - Refactor code in main.c
- *     - separate c and h file for boards, triangles/triangulation, and rooms
  */
 
 
@@ -66,44 +54,6 @@ void printBoard(char ** board) {
 		printf(board[i]);
 		printf("\n");
     }
-}
-
-// Given lists r1 and r2, combine both into one sorted list
-// Preconditions:
-//  - r1 and r2 are both sorted (lowest at root)
-void listZipper(Room * r1, Room * r2) {
-
-    // go to roots of each 
-    while(r2->parent != 0)
-		r2 = r2->parent;
-    
-    while(r1->parent != 0)
-		r1 = r1->parent;
-    
-    Room * tempChild;
-       
-    while(r2 != 0) {
-
-		if(r1 == r2)
-			return;
-	
-		while(r2->id > r1->id) {
-			if(r1->child == 0) {
-				r2->parent = r1;
-				r1->child = r2;
-				return;
-			}
-			r1 = r1->child;
-		}
-
-		tempChild = r2->child;
-		r2->parent = r1->parent; //r2 will always point to top of second list
-		r2->child = r1;
-		r1->parent = r2;
-		r2 = tempChild;
-	
-    }
-    return;
 }
 
 // returns 1 if r1 and r2 have a collision. Returns 2 if only corners collide
@@ -371,17 +321,10 @@ void generateSubRoom(Room * subRoom) {
 	
 }
 
-int main() {
+// creates and initializes board. Returns pointer to board
+char ** board initBoard() {
 
-    /// DEBUG
-    clock_t start, end;
-    double cpu_time;
-    start = clock();
-    /// DEBUG
-    
-    system("clear");
-    
-    //init 100x100 board to 0s
+	//init 100x100 board to 0s
     char ** board = (char **) malloc(sizeof(char *) * TRUEWID);
     // + 1 char in row for EOL
     // each index of board points to a new row in trueBoard
@@ -396,10 +339,14 @@ int main() {
 		board[i][TRUELEN] = 0;
 		currIndex += (TRUELEN + 1);
     }
-    
-    srand(time(NULL));
-    Room * roomList = (Room *) malloc(sizeof(Room) * NUMROOMS);
 
+	return board;
+}
+
+// generates rooms and returns list of rooms
+Room * roomList generateRooms(char ** board) {
+
+	Room * roomList = (Room *) malloc(sizeof(Room) * NUMROOMS);
 
 	/* Get the number of subrooms per actual room (max of 10 subrooms) */
 	
@@ -477,66 +424,31 @@ int main() {
 		firstSubRoom += subRoomsPerRoom[i];
 		
 	}
+	
+	return roomList;
+}
 
+int main() {
+
+    /// DEBUG
+    clock_t start, end;
+    double cpu_time;
+    start = clock();
+    /// DEBUG
+    
+    system("clear");
+    
+	char ** board = initBoard();
 	
+    srand(time(NULL));
+    
+	Room * roomList = generateRooms(board);
 	
-	
-    for(int i = 0; i < NUMROOMS ; i++) {
-	
-		
+    for(int i = 0; i < NUMROOMS ; i++) {		
 		_drawRoom(board, &roomList[i]);
-	
     }
 
 	printBoard(board);
-	
-	/*
-    collisionCheck(board, roomList, NUMROOMS);
-    
-    if(NUMROOMS <= 36) // 0 through 9 and A through Z -> 36 chars
-		debug_drawRoomIds(board, roomList, NUMROOMS);
-    
-    printBoard(board);
-    // count true number of rooms
-    int nRoomsPostGen = 0;
-    for(int i = NUMROOMS - 1; i >= 0; i--) {
-		if(roomList[i].parent == 0) {
-			nRoomsPostGen++;
-		}
-    }
-    Node * roomsPostGen = malloc(sizeof(Node) * nRoomsPostGen);
-    nRoomsPostGen = 0;
-    // insert rooms and their sizes into node array
-    for(int i = NUMROOMS - 1; i >= 0; i--) {
-		if(roomList[i].parent == 0) {
-			roomsPostGen[nRoomsPostGen].room = &roomList[i];
-			roomsPostGen[nRoomsPostGen].size = findTrueRoomSize(&roomList[i]);
-			nRoomsPostGen++;
-		}
-    }
-    printf("Num rooms post generation and collision: %d\n", nRoomsPostGen);
-    
-    int nMainRooms = nRoomsPostGen / 2;
-    int nSideRooms = nRoomsPostGen - nMainRooms;
-    
-    // support node init
-    // choose 3 points for a triangle that surrounds all points
-    
-    
-    // delaunay triangulation of m rooms
-    
-    // MST of m rooms' edges
-
-    // 1/2 of remaining edges activated
-
-    // any other rooms intersecting edge of MST get added to tree
-
-    // nearest neighbors of m rooms added to tree
-
-    // not sure what to do for remaining rooms
-
-
-	*/
     
     /// DEBUG
     end = clock();
