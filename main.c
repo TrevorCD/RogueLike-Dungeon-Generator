@@ -322,7 +322,7 @@ void generateSubRoom(Room * subRoom) {
 }
 
 // creates and initializes board. Returns pointer to board
-char ** board initBoard() {
+char ** initBoard() {
 
 	//init 100x100 board to 0s
     char ** board = (char **) malloc(sizeof(char *) * TRUEWID);
@@ -344,7 +344,7 @@ char ** board initBoard() {
 }
 
 // generates rooms and returns list of rooms
-Room * roomList generateRooms(char ** board) {
+Room * generateRooms(char ** board) {
 
 	Room * roomList = (Room *) malloc(sizeof(Room) * NUMROOMS);
 
