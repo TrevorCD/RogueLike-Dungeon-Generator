@@ -106,78 +106,73 @@ void listZipper(Room * r1, Room * r2) {
     return;
 }
 
-void collisionCheck(char ** board, Room * rooms, int nRooms) {
+// returns 1 if r1 and r2 have a collision. Returns 2 if only corners collide
+int collisionCheck(char ** board, Room * r1, Room * r2) {
 
     char xCol;
     char yCol;
     
-    Room * r1;
-    Room * r2;
-
     int r1x, r1y, r1w, r1l, r2x, r2y, r2w, r2l;
     int xCorner, yCorner; // for literal edge case
 
-    for(int i = 0; i < nRooms; i++) {
+	r1x = r1->x; r1y = r1->y; r1w = r1->w; r1l = r1->l;
 	
-		r1 = &rooms[i];
-		r1x = r1->x; r1y = r1->y; r1w = r1->w; r1l = r1->l;
-	
-		for(int j = i + 1; j < nRooms; j++) {
-	    
-			r2 = &rooms[j];
-			r2x = r2->x; r2y = r2->y; r2w = r2->w; r2l = r2->l;
-			xCol = 0; yCol = 0; xCorner = 0; yCorner = 0;
+	r2x = r2->x; r2y = r2->y; r2w = r2->w; r2l = r2->l;
+	xCol = 0; yCol = 0; xCorner = 0; yCorner = 0;
 
-			// x collisions
-			if(r1x < r2x) { //check RHS of r1 for collision
-				if(r1x + r1w > r2x - r2w) {
-					xCol = 1;
-					if(r1x + r1w == (r2x - r2w) + 1) {
-						xCorner = 1;
-						printf("xCorner %d %d!\n", r1->id, r2->id); }
-				}
+	// x collisions
+	if(r1x < r2x) { //check RHS of r1 for collision
+		if(r1x + r1w > r2x - r2w) {
+			xCol = 1;
+			if(r1x + r1w == (r2x - r2w) + 1) {
+				xCorner = 1;
+				//printf("xCorner %d %d!\n", r1->id, r2->id);
 			}
-			else if(r1x > r2x) { //case 1: check LHS of r1 for collision
-				if(r1x - r1w < r2x + r2w) {
-					xCol = 1;
-					if((r1x - r1w) + 1 == r2x + r2w) {
-						xCorner = 1;
-						printf("xCorner %d %d!\n", r1->id, r2->id); }
-				}
+		}
+	}
+	else if(r1x > r2x) { //case 1: check LHS of r1 for collision
+		if(r1x - r1w < r2x + r2w) {
+			xCol = 1;
+			if((r1x - r1w) + 1 == r2x + r2w) {
+				xCorner = 1;
+				//printf("xCorner %d %d!\n", r1->id, r2->id);
 			}
-			else //case 2: r1x == r2x
-				xCol = 1;
+		}
+	}
+	else //case 2: r1x == r2x
+		xCol = 1;
 
 	    
-			// y collisions
-			if(r1y < r2y) { //check bottom of r1 for collision
-				if(r1y + r1l > r2y - r2l) {
-					yCol = 1;
-					if(r1y + r1l == (r2y - r2l) + 1) {
-						yCorner = 1;
-						printf("yCorner %d %d!\n", r1->id, r2->id);}
-				}
+	// y collisions
+	if(r1y < r2y) { //check bottom of r1 for collision
+		if(r1y + r1l > r2y - r2l) {
+			yCol = 1;
+			if(r1y + r1l == (r2y - r2l) + 1) {
+				yCorner = 1;
+				//printf("yCorner %d %d!\n", r1->id, r2->id);
 			}
-			else if(r1y > r2y) { //case 1: check top of r1 for collision
-				if(r1y - r1l < r2y + r2l) {
-					yCol = 1;
-					if((r1y - r1l) + 1 == r2y + r2l) {
-						yCorner = 1;
-						printf("yCorner %d %d!\n", r1->id, r2->id);}
-				}
+		}
+	}
+	else if(r1y > r2y) { //case 1: check top of r1 for collision
+		if(r1y - r1l < r2y + r2l) {
+			yCol = 1;
+			if((r1y - r1l) + 1 == r2y + r2l) {
+				yCorner = 1;
+				//printf("yCorner %d %d!\n", r1->id, r2->id);
 			}
-			else //case 2: r1y == r2y
-				yCol = 1;
+		}
+	}
+	else //case 2: r1y == r2y
+		yCol = 1;
 
 	    
-			if(yCol && xCol) {
-				if(xCorner && yCorner) {
-					// IMPLEMENT HERE
-				}
-				listZipper(r1, r2);
-			}
-		}// end for j loop	
-    }// end for i loop
+	if(yCol && xCol) {
+		if(xCorner && yCorner) {
+			return 2;
+		}
+		return 1;
+	}
+	return 0;
 }
 
 double length(double x1, double y1, double x2, double y2) {
@@ -347,6 +342,35 @@ void delaunayTriangulation(Node * nodes, int nNodes,
     free(supports); free(facadeRooms);
 }
 
+void generateSubRoom(Room * subRoom) {
+
+	int l = rand() % MAX_L;
+	if(l < MIN_L)
+		l = MIN_L;
+	subRoom->l = l;
+	
+	int w = rand() % MAX_W;
+	if(w < MIN_W)
+		w = MIN_W;
+
+	subRoom->w = w;
+	
+	int x = rand() % MAX_X;
+	if(x < MIN_X)
+		x = MIN_X;
+	subRoom->x = x;
+      
+	int y = rand() % MAX_Y;
+	if(y < MIN_Y)
+		y = MIN_Y;
+	subRoom->y = y;
+
+	subRoom->parent = 0;	
+	subRoom->child = 0;	
+	subRoom->id = -1;
+	
+}
+
 int main() {
 
     /// DEBUG
@@ -375,38 +399,98 @@ int main() {
     
     srand(time(NULL));
     Room * roomList = (Room *) malloc(sizeof(Room) * NUMROOMS);
-    //random gen rooms
+
+
+	/* Get the number of subrooms per actual room (max of 10 subrooms) */
+	
+	const int maxSubRooms = 10;
+	int subRoomsLeft = NUMROOMS;
+	int subRoomsPerRoom[25];
+	int roomIndex = 0;
+	int subrooms;
+
+	while(subRoomsLeft > 0) {
+		
+		subrooms = rand() % maxSubRooms;
+		subrooms++; // to have range 1 - maxSubRooms
+
+		if(subrooms > subRoomsLeft) subrooms = subRoomsLeft;
+
+		subRoomsPerRoom[roomIndex] = subrooms;
+		roomIndex++;
+
+		subRoomsLeft -= subrooms;
+	}
+
+	int nRooms = roomIndex;
+	
+	for(int i = 0; i < nRooms; i++) {
+		printf("Room %d: %d sub rooms\n", i, subRoomsPerRoom[i]);
+	}
+
+	
+	/* Generate each actual room via subroom generation */
+	int roomListIndex = 0;
+	int firstSubRoom = 0; // first sub room this room
+
+	bool genSuccess = false;
+	
+	for(int i = 0; i < nRooms; i++) {
+
+		for(int j = 0; j < subRoomsPerRoom[i]; j++) {
+			genSuccess = false;
+			
+			while(genSuccess == false) {
+				generateSubRoom(&roomList[roomListIndex]);
+				// first subroom needs to be true before previous room check
+				if(j == 0) genSuccess = true;
+				
+				// ensure collision with previous subroom in this room
+				for(int i = firstSubRoom; i < roomListIndex; i++) {
+					if(collisionCheck(
+						   board,
+						   &roomList[roomListIndex],
+						   &roomList[i]) == 1)
+					{
+						// successful collision with subroom in this room
+						genSuccess = true;
+						break;
+					}
+				}
+				
+				// ensure no collision with previous rooms
+				for(int i = 0; i < firstSubRoom; i++) {
+					if(collisionCheck(
+						   board,
+						   &roomList[roomListIndex],
+						   &roomList[i]) != 0)
+					{
+						// collision with previous room
+						genSuccess = false;
+						break;
+					}
+				}
+			}
+			
+			roomListIndex++;
+		}
+		firstSubRoom += subRoomsPerRoom[i];
+		
+	}
+
+	
+	
+	
     for(int i = 0; i < NUMROOMS ; i++) {
 	
-		int l = rand() % MAX_L;
-		if(l < MIN_L)
-			l = MIN_L;
-		roomList[i].l = l;
-	
-		int w = rand() % MAX_W;
-		if(w < MIN_W)
-			w = MIN_W;
-
-		roomList[i].w = w;
-	
-		int x = rand() % MAX_X;
-		if(x < MIN_X)
-			x = MIN_X;
-		roomList[i].x = x;
-      
-		int y = rand() % MAX_Y;
-		if(y < MIN_Y)
-			y = MIN_Y;
-		roomList[i].y = y;
-
-		roomList[i].parent = 0;	
-		roomList[i].child = 0;	
-		roomList[i].id = i;
-	
+		
 		_drawRoom(board, &roomList[i]);
 	
     }
 
+	printBoard(board);
+	
+	/*
     collisionCheck(board, roomList, NUMROOMS);
     
     if(NUMROOMS <= 36) // 0 through 9 and A through Z -> 36 chars
@@ -452,7 +536,7 @@ int main() {
     // not sure what to do for remaining rooms
 
 
-
+	*/
     
     /// DEBUG
     end = clock();
