@@ -13,6 +13,8 @@
 
 #include "defns.h"
 
+#define DEBUG 1
+
 void _drawRoom(char ** board , SubRoom * room) {
     
     int startx = (room->x - room->w);
@@ -126,7 +128,7 @@ int collisionCheck(char ** board, SubRoom * r1, SubRoom * r2) {
 }
 
 // debug function: draws each room's ID in center of room on board
-// prints IDs in base NUMROOMS
+// prints IDs in base N_SUBROOMS
 void debug_drawRoomIds(char ** board, SubRoom * rooms, int n) {
     char idChar;
     SubRoom * room;
@@ -194,22 +196,21 @@ char ** initBoard() {
 }
 
 // generates rooms and returns list of rooms
-SubRoom * generateRooms(char ** board) {
+void generateRooms(Level * level) {
 
-	SubRoom * subRoomList = (SubRoom *) malloc(sizeof(SubRoom) * NUMROOMS);
-
+	level->subRoomList = (SubRoom *) malloc(sizeof(SubRoom) * N_SUBROOMS);
+	
 	/* Get the number of subrooms per actual room (max of 10 subrooms) */
 	
-	const int maxSubRooms = 10;
-	int subRoomsLeft = NUMROOMS;
+	int subRoomsLeft = N_SUBROOMS;
 	int subRoomsPerRoom[25];
 	int roomIndex = 0;
 	int subrooms;
 
 	while(subRoomsLeft > 0) {
 		
-		subrooms = rand() % maxSubRooms;
-		subrooms++; // to have range 1 - maxSubRooms
+		subrooms = rand() % MAX_SUBROOMS;
+		subrooms++; // to have range 1 - MAX_SUBROOMS
 
 		if(subrooms > subRoomsLeft) subrooms = subRoomsLeft;
 
@@ -220,11 +221,14 @@ SubRoom * generateRooms(char ** board) {
 	}
 
 	int nRooms = roomIndex;
-	
+	level->nRooms = nRooms;
+	level->roomList = (Room *) malloc(sizeof(Room) * nRooms);
+
+#if DEBUG
 	for(int i = 0; i < nRooms; i++) {
 		printf("Room %d: %d sub rooms\n", i, subRoomsPerRoom[i]);
 	}
-
+#endif
 	
 	/* Generate each actual room via subroom generation */
 	int subRoomListIndex = 0;
@@ -238,16 +242,16 @@ SubRoom * generateRooms(char ** board) {
 			genSuccess = false;
 			
 			while(genSuccess == false) {
-				generateSubRoom(&subRoomList[subRoomListIndex]);
+				generateSubRoom(&level->subRoomList[subRoomListIndex]);
 				// first subroom needs to be true before previous room check
 				if(j == 0) genSuccess = true;
 				
 				// ensure collision with previous subroom in this room
 				for(int i = firstSubRoom; i < subRoomListIndex; i++) {
 					if(collisionCheck(
-						   board,
-						   &subRoomList[subRoomListIndex],
-						   &subRoomList[i]) == 1)
+						   level->board,
+						   &level->subRoomList[subRoomListIndex],
+						   &level->subRoomList[i]) == 1)
 					{
 						// successful collision with subroom in this room
 						genSuccess = true;
@@ -258,9 +262,9 @@ SubRoom * generateRooms(char ** board) {
 				// ensure no collision with previous rooms
 				for(int i = 0; i < firstSubRoom; i++) {
 					if(collisionCheck(
-						   board,
-						   &subRoomList[subRoomListIndex],
-						   &subRoomList[i]) != 0)
+						   level->board,
+						   &level->subRoomList[subRoomListIndex],
+						   &level->subRoomList[i]) != 0)
 					{
 						// collision with previous room
 						genSuccess = false;
@@ -268,42 +272,50 @@ SubRoom * generateRooms(char ** board) {
 					}
 				}
 			}
-			subRoomList[subRoomListIndex].id = subRoomListIndex;
+			level->subRoomList[subRoomListIndex].id = subRoomListIndex;
 			subRoomListIndex++;
 		}
 		firstSubRoom += subRoomsPerRoom[i];
 		
 	}
 	
-	return subRoomList;
+	return;
 }
 
 int main() {
 
-    /// DEBUG
+#if DEBUG
     clock_t start, end;
     double cpu_time;
     start = clock();
-    /// DEBUG
+#endif
     
     system("clear");
-    
-	char ** board = initBoard();
+
+	Level level = {0};
+	level.levelId = 0;
+	
+	level.board = initBoard();
 	
     srand(time(NULL));
     
-	SubRoom * subRoomList = generateRooms(board);
+	generateRooms(&level);
 	
-    for(int i = 0; i < NUMROOMS ; i++) {		
-		_drawRoom(board, &subRoomList[i]);
+    for(int i = 0; i < N_SUBROOMS ; i++) {		
+		_drawRoom(level.board, &level.subRoomList[i]);
     }
 
-	printBoard(board);
-	debug_drawRoomIds(board, subRoomList, NUMROOMS);
-		
-    /// DEBUG
+	printBoard(level.board);
+
+#if DEBUG
+	debug_drawRoomIds(level.board, level.subRoomList, N_SUBROOMS);
+#endif
+	
+#if DEBUG
     end = clock();
     cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("cpu time: %f\n", cpu_time);
-    /// DEBUG
+#endif
+	
+	return 0;
 }

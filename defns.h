@@ -10,8 +10,8 @@
 
 #define TRUELEN 150
 #define TRUEWID 50
-#define NUMROOMS 25
-
+#define N_SUBROOMS 25    /* total number of subrooms per level */
+#define MAX_SUBROOMS 10  /* maximum number of subrooms per room */
 
 // stress test values
 /*
@@ -44,4 +44,25 @@ typedef struct subroom {
     
 } SubRoom;
 
+typedef struct room {
+
+	int x;
+	int y;
+	int nSubRooms;
+	
+	SubRoom * subRooms;
+	
+	char id;
+} Room;
+
+typedef struct level {
+
+	int levelId;
+	int nRooms;
+	SubRoom * subRoomList;
+	Room * roomList;
+	char ** board;
+	
+} Level;
+	
 #endif // DEFNS_H
