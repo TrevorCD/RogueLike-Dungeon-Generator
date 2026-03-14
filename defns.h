@@ -33,11 +33,8 @@
 #define MIN_Y ( MAX_L + 1 )
 
 
-typedef struct room {
+typedef struct subroom {
 
-    struct room * parent; //
-    struct room * child;  // for linked list
-    
     int l;         // length across x dimension
     int w;         // width across y dimension
     int x;         // horizontal dimension, grows right
@@ -45,26 +42,6 @@ typedef struct room {
     
     char id;       //initial gen room id, index of roomList in main
     
-} Room;
-
-typedef struct coordinate {
-
-    double x;
-    double y;
-    
-} Coord;
-
-typedef struct roomNodeContainer {
-
-    Room * room; // support nodes have facade rooms w/ id -1
-    int size;
-
-} Node;
-
-typedef struct triangle {
-    Node * nodes[3];
-    Coord center;
-    double radius;
-} Tri;
+} SubRoom;
 
 #endif // DEFNS_H

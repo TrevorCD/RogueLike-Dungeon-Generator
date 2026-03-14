@@ -13,7 +13,7 @@
 
 #include "defns.h"
 
-void _drawRoom(char ** board , Room * room) {
+void _drawRoom(char ** board , SubRoom * room) {
     
     int startx = (room->x - room->w);
     int endx = (room->x + room->w );
@@ -57,7 +57,7 @@ void printBoard(char ** board) {
 }
 
 // returns 1 if r1 and r2 have a collision. Returns 2 if only corners collide
-int collisionCheck(char ** board, Room * r1, Room * r2) {
+int collisionCheck(char ** board, SubRoom * r1, SubRoom * r2) {
 
     char xCol;
     char yCol;
@@ -125,54 +125,11 @@ int collisionCheck(char ** board, Room * r1, Room * r2) {
 	return 0;
 }
 
-double length(double x1, double y1, double x2, double y2) {
-    double a = x1 - x2;
-    double b = y1 - y2;
-    return sqrt((a*a) + (b*b));
-}
-
-// finds the center point of the circumcircle of the triangle the 3 input
-// vertices create.
-void circumCircleCenter(Room * one, Room * two, Room * three, Coord * output) {
-    
-    double x1 = one->x;
-    double y1 = one->y;
-    double x2 = two->x;
-    double y2 = two->y;
-    double x3 = three->x;
-    double y3 = three->y;
-
-
-    double x, y; // coordinates of circumcircle
-    double invSlope12, invSlope23; // perpendicular slope to lines 1,2 and 2,3
-    Coord midpoint12, midpoint23;
-    double b12, b23; // b in y = mx + b
-    
-    midpoint12.x = (x1 + x2) / 2;
-    midpoint12.y = (y1 + y2) / 2;
-    midpoint23.x = (x2 + x3) / 2;
-    midpoint23.y = (y2 + y3) / 2;
-
-    invSlope12 = -1 / ((y2 - y1) / (x2 - x1));
-    invSlope23 = -1 / ((y3 - y2) / (x3 - x2));
-
-    b12 = midpoint12.y - (invSlope12 * midpoint12.x);
-    b23 = midpoint23.y - (invSlope23 * midpoint23.x);
-
-    x = ((b23 - b12) * invSlope23) / invSlope12;
-    y = (invSlope12 * x) + b12;
-    
-    output->x = x;
-    output->y = y;
-    
-    return;
-}
-
 // debug function: draws each room's ID in center of room on board
 // prints IDs in base NUMROOMS
-void debug_drawRoomIds(char ** board, Room * rooms, int n) {
+void debug_drawRoomIds(char ** board, SubRoom * rooms, int n) {
     char idChar;
-    Room * room;
+    SubRoom * room;
     
     for(int i = 0; i < n; i++) {
 		room = &rooms[i];
@@ -187,112 +144,7 @@ void debug_drawRoomIds(char ** board, Room * rooms, int n) {
     
 }
 
-// Rudimentary calculation. Does not take into account overlap between rooms
-// Summation of all room sizes in list
-int findTrueRoomSize(Room * room) {
-    int size = room->w * room->l * 4;
-    while(room->child) {
-		room = room->child;
-		size += (room->w * room->l * 4);
-    }
-    return size;
-}
-
-// given 3 nodes, init triangle defined by them. Also calcualtes circumcircle
-// center and circumcircle radius
-Tri * newTri(Node * one, Node * two, Node * three) {
-    Tri * tri = malloc(sizeof(Tri));
-    tri->nodes[0] = one;
-    tri->nodes[1] = two;
-    tri->nodes[2] = two;
-    circumCircleCenter(one->room, two->room, three->room, &tri->center);
-    tri->radius = length(one->room->x, one->room->y,
-						  tri->center.x, tri->center.y);
-    return tri;
-}
-
-// deallocation of tri struct
-void delTri(Tri * tri) {
-    free(tri);
-    return;
-}
-
-void delaunayTriangulation(Node * nodes, int nNodes,
-							Node * one, Node * two, Node * three) {
-    Tri * tris[nNodes];
-    int i;
-    for(i = 1; i < nNodes; i++)
-		tris[i] = 0;
-    // init support tri
-    Node * supports = malloc(sizeof(Node) * 3);
-    Room * facadeRooms = malloc(sizeof(Room) * 3);
-    facadeRooms[0].id = -1;
-    facadeRooms[0].x = (0 - (TRUELEN / 2));
-    facadeRooms[0].y = 0;
-    supports[0].room = &facadeRooms[0];
-
-    facadeRooms[1].id = -1;
-    facadeRooms[1].x = (TRUELEN + (TRUELEN / 2));
-    facadeRooms[1].y = 0;
-    supports[1].room = &facadeRooms[1];
-
-    facadeRooms[2].id = -1;
-    facadeRooms[2].x = TRUELEN / 2;
-    facadeRooms[2].y = TRUEWID * 2;
-    supports[2].room = &facadeRooms[2];
-    
-    tris[0] = newTri(&supports[0], &supports[1], &supports[2]);
-    int nTris = 1;
-
-    char hits[nNodes]; // keeps track of collisions for each nx iteration
-    for(i = 0; i < nNodes; i++)
-		hits[i] = 0;
-    
-    Node * point;
-    Tri * t;
-    double distance;
-    Room * room;
-
-    int nx, tx, tax, nHits;
-    for(nx = 0; nx < nNodes; nx++) {
-		point = &nodes[nx];
-		room = point->room;
-		// identify which tris' circumcircles contain this point
-		// tx is the index of the actual tri. tax is the index into the array
-		// where that tri * exists. This way I don't have to use linked lists
-		// or shift elements in the array
-		tx = 0; tax = 0; nHits = 0;
-		while(tx < nTris)  {
-			if(tris[tax] != 0) {
-				tx++;
-				t = tris[tax];
-				distance = length(room->x, room->y, t->center.x, t->center.y);
-				// may need an epsilon here to ignore points in the tri
-				if(distance < t->radius) { //hit!
-					hits[tax] = 1;
-					nHits++;
-				}
-				if(nHits) {
-					// retriangulation
-
-					// STOPPED WORKING HERE ------------------------------------
-		    
-
-					//
-				}
-			}
-			tax++;
-			/// TEMP DEBUG PRINT
-			if(tax == nNodes) {printf("TRI BUFF OVERFLOW!!!\n"); exit(0);}
-		}
-		// restructure triangles
-    }
-    // destroy any triangles that have a support node
-
-    free(supports); free(facadeRooms);
-}
-
-void generateSubRoom(Room * subRoom) {
+void generateSubRoom(SubRoom * subRoom) {
 
 	int l = rand() % MAX_L;
 	if(l < MIN_L)
@@ -315,8 +167,6 @@ void generateSubRoom(Room * subRoom) {
 		y = MIN_Y;
 	subRoom->y = y;
 
-	subRoom->parent = 0;	
-	subRoom->child = 0;	
 	subRoom->id = -1;
 	
 }
@@ -344,9 +194,9 @@ char ** initBoard() {
 }
 
 // generates rooms and returns list of rooms
-Room * generateRooms(char ** board) {
+SubRoom * generateRooms(char ** board) {
 
-	Room * roomList = (Room *) malloc(sizeof(Room) * NUMROOMS);
+	SubRoom * subRoomList = (SubRoom *) malloc(sizeof(SubRoom) * NUMROOMS);
 
 	/* Get the number of subrooms per actual room (max of 10 subrooms) */
 	
@@ -377,7 +227,7 @@ Room * generateRooms(char ** board) {
 
 	
 	/* Generate each actual room via subroom generation */
-	int roomListIndex = 0;
+	int subRoomListIndex = 0;
 	int firstSubRoom = 0; // first sub room this room
 
 	bool genSuccess = false;
@@ -388,16 +238,16 @@ Room * generateRooms(char ** board) {
 			genSuccess = false;
 			
 			while(genSuccess == false) {
-				generateSubRoom(&roomList[roomListIndex]);
+				generateSubRoom(&subRoomList[subRoomListIndex]);
 				// first subroom needs to be true before previous room check
 				if(j == 0) genSuccess = true;
 				
 				// ensure collision with previous subroom in this room
-				for(int i = firstSubRoom; i < roomListIndex; i++) {
+				for(int i = firstSubRoom; i < subRoomListIndex; i++) {
 					if(collisionCheck(
 						   board,
-						   &roomList[roomListIndex],
-						   &roomList[i]) == 1)
+						   &subRoomList[subRoomListIndex],
+						   &subRoomList[i]) == 1)
 					{
 						// successful collision with subroom in this room
 						genSuccess = true;
@@ -409,8 +259,8 @@ Room * generateRooms(char ** board) {
 				for(int i = 0; i < firstSubRoom; i++) {
 					if(collisionCheck(
 						   board,
-						   &roomList[roomListIndex],
-						   &roomList[i]) != 0)
+						   &subRoomList[subRoomListIndex],
+						   &subRoomList[i]) != 0)
 					{
 						// collision with previous room
 						genSuccess = false;
@@ -418,14 +268,14 @@ Room * generateRooms(char ** board) {
 					}
 				}
 			}
-			
-			roomListIndex++;
+			subRoomList[subRoomListIndex].id = subRoomListIndex;
+			subRoomListIndex++;
 		}
 		firstSubRoom += subRoomsPerRoom[i];
 		
 	}
 	
-	return roomList;
+	return subRoomList;
 }
 
 int main() {
@@ -442,14 +292,15 @@ int main() {
 	
     srand(time(NULL));
     
-	Room * roomList = generateRooms(board);
+	SubRoom * subRoomList = generateRooms(board);
 	
     for(int i = 0; i < NUMROOMS ; i++) {		
-		_drawRoom(board, &roomList[i]);
+		_drawRoom(board, &subRoomList[i]);
     }
 
 	printBoard(board);
-    
+	debug_drawRoomIds(board, subRoomList, NUMROOMS);
+		
     /// DEBUG
     end = clock();
     cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
