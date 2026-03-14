@@ -224,16 +224,10 @@ void generateRooms(Level * level) {
 	level->nRooms = nRooms;
 	level->roomList = (Room *) malloc(sizeof(Room) * nRooms);
 
-#if DEBUG
-	for(int i = 0; i < nRooms; i++) {
-		printf("Room %d: %d sub rooms\n", i, subRoomsPerRoom[i]);
-	}
-#endif
-	
 	/* Generate each actual room via subroom generation */
 	int subRoomListIndex = 0;
 	int firstSubRoom = 0; // first sub room this room
-
+	
 	bool genSuccess = false;
 	
 	for(int i = 0; i < nRooms; i++) {
@@ -277,6 +271,31 @@ void generateRooms(Level * level) {
 		}
 		firstSubRoom += subRoomsPerRoom[i];
 		
+	}
+
+	/* Populate roomList with room information */
+    int numPrevSubRooms = 0;
+	int subRoomEnd;
+	int avgX, avgY;
+	
+	for(int i = 0; i < nRooms; i++) {
+		avgX = 0; avgY = 0;
+		
+		level->roomList[i].id = i;
+		level->roomList[i].nSubRooms = subRoomsPerRoom[i];
+		level->roomList[i].subRooms = &level->subRoomList[numPrevSubRooms];
+
+		subRoomEnd = numPrevSubRooms + subRoomsPerRoom[i];
+		for(int j = numPrevSubRooms; j < subRoomEnd; j++) {
+			avgX += level->subRoomList[j].x;
+			avgY += level->subRoomList[j].y;
+		}
+		avgX /= subRoomsPerRoom[i];
+		avgY /= subRoomsPerRoom[i];
+		level->roomList[i].x = avgX;
+		level->roomList[i].y = avgY;
+		
+		numPrevSubRooms += subRoomsPerRoom[i];
 	}
 	
 	return;
