@@ -53,7 +53,13 @@ typedef struct room {
 	SubRoom * subRooms;
 	
 	char id;
+
 } Room;
+
+typedef struct connection {
+	Room * room;
+
+} Connection;
 
 typedef struct level {
 

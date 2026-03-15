@@ -156,7 +156,6 @@ void generateSubRoom(SubRoom * subRoom) {
 	int w = rand() % MAX_W;
 	if(w < MIN_W)
 		w = MIN_W;
-
 	subRoom->w = w;
 	
 	int x = rand() % MAX_X;
@@ -178,9 +177,14 @@ char ** initBoard() {
 
 	//init 100x100 board to 0s
     char ** board = (char **) malloc(sizeof(char *) * TRUEWID);
+	if(board == NULL) return NULL;
     // + 1 char in row for EOL
     // each index of board points to a new row in trueBoard
     char * trueBoard = (char *) malloc(sizeof(char) * (TRUESIZE + TRUEWID));
+	if(trueBoard == NULL) {
+		free(board);
+		return NULL;
+	}
 	
     int currIndex = 0;
     for(int i = 0; i < TRUEWID ; i++) {
@@ -196,45 +200,42 @@ char ** initBoard() {
 }
 
 // generates rooms and returns list of rooms
-void generateRooms(Level * level) {
-
+int generateRooms(Level * level) {
 	level->subRoomList = (SubRoom *) malloc(sizeof(SubRoom) * N_SUBROOMS);
-	
-	/* Get the number of subrooms per actual room (max of 10 subrooms) */
+	if(level->subRoomList == NULL) return -1;
 	
 	int subRoomsLeft = N_SUBROOMS;
 	int subRoomsPerRoom[25];
 	int roomIndex = 0;
 	int subrooms;
 
+	/* Get the number of subrooms per actual room (max of 10 subrooms) */
 	while(subRoomsLeft > 0) {
-		
 		subrooms = rand() % MAX_SUBROOMS;
 		subrooms++; // to have range 1 - MAX_SUBROOMS
-
-		if(subrooms > subRoomsLeft) subrooms = subRoomsLeft;
-
+		if(subrooms > subRoomsLeft)
+			subrooms = subRoomsLeft;
 		subRoomsPerRoom[roomIndex] = subrooms;
 		roomIndex++;
-
 		subRoomsLeft -= subrooms;
 	}
 
 	int nRooms = roomIndex;
 	level->nRooms = nRooms;
 	level->roomList = (Room *) malloc(sizeof(Room) * nRooms);
-
+	if(level->roomList == NULL) {
+		free(level->subRoomList);
+		return -1;
+	}	
+	
 	/* Generate each actual room via subroom generation */
 	int subRoomListIndex = 0;
 	int firstSubRoom = 0; // first sub room this room
-	
 	bool genSuccess = false;
 	
 	for(int i = 0; i < nRooms; i++) {
-
 		for(int j = 0; j < subRoomsPerRoom[i]; j++) {
 			genSuccess = false;
-			
 			while(genSuccess == false) {
 				generateSubRoom(&level->subRoomList[subRoomListIndex]);
 				// first subroom needs to be true before previous room check
@@ -245,21 +246,18 @@ void generateRooms(Level * level) {
 					if(collisionCheck(
 						   level->board,
 						   &level->subRoomList[subRoomListIndex],
-						   &level->subRoomList[i]) == 1)
-					{
+						   &level->subRoomList[i]) == 1) {
 						// successful collision with subroom in this room
 						genSuccess = true;
 						break;
 					}
 				}
-				
 				// ensure no collision with previous rooms
 				for(int i = 0; i < firstSubRoom; i++) {
 					if(collisionCheck(
 						   level->board,
 						   &level->subRoomList[subRoomListIndex],
-						   &level->subRoomList[i]) != 0)
-					{
+						   &level->subRoomList[i]) != 0) {
 						// collision with previous room
 						genSuccess = false;
 						break;
@@ -270,7 +268,6 @@ void generateRooms(Level * level) {
 			subRoomListIndex++;
 		}
 		firstSubRoom += subRoomsPerRoom[i];
-		
 	}
 
 	/* Populate roomList with room information */
@@ -298,7 +295,29 @@ void generateRooms(Level * level) {
 		numPrevSubRooms += subRoomsPerRoom[i];
 	}
 	
-	return;
+	return 0;
+}
+
+int generateLevel(Level * level, int id) {	
+	level->levelId = id;	
+	level->board = initBoard();
+	if(level->board == NULL) return -1;
+	
+	if(generateRooms(level) != 0) {
+		// free board
+		return -1;
+	}
+	
+	// draw rooms to board
+	for(int i = 0; i < N_SUBROOMS ; i++) {		
+		_drawRoom(level->board, &level->subRoomList[i]);
+    }
+	
+	// create halls
+
+	// draw halls to board
+
+	return 0;
 }
 
 int main() {
@@ -308,22 +327,12 @@ int main() {
     double cpu_time;
     start = clock();
 #endif
-    
     system("clear");
-
+	srand(time(NULL));
+	
 	Level level = {0};
-	level.levelId = 0;
-	
-	level.board = initBoard();
-	
-    srand(time(NULL));
+	if(generateLevel(&level, 0) != 0) return -1;
     
-	generateRooms(&level);
-	
-    for(int i = 0; i < N_SUBROOMS ; i++) {		
-		_drawRoom(level.board, &level.subRoomList[i]);
-    }
-
 	printBoard(level.board);
 
 #if DEBUG
