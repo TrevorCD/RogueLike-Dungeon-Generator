@@ -15,6 +15,15 @@
 
 #define DEBUG 1
 
+int distance(int x1, int y1, int x2, int y2) {
+
+	int xdiff = abs(x1 - x2);
+	int ydiff = abs(y1 - y2);
+	double a2b2 = (double) ((xdiff * xdiff) + (ydiff * ydiff));
+	int hypot = (int) sqrt(a2b2);
+	return hypot;
+}
+
 void _drawRoom(char ** board , SubRoom * room) {
     
     int startx = (room->x - room->w);
@@ -129,19 +138,20 @@ int collisionCheck(char ** board, SubRoom * r1, SubRoom * r2) {
 
 // debug function: draws each room's ID in center of room on board
 // prints IDs in base N_SUBROOMS
-void debug_drawRoomIds(char ** board, SubRoom * rooms, int n) {
+void debug_drawRoomIds(Level * level) {
     char idChar;
-    SubRoom * room;
-    
+    int n = level->nRooms;
+	Room * room;
+	
     for(int i = 0; i < n; i++) {
-		room = &rooms[i];
+		room = &level->roomList[i];
 	
 		if(i < 10)
 			idChar = i + 48;
 		else
 			idChar = i + 55;
 	
-		board[room->y][room->x] = idChar;
+		level->board[room->y][room->x] = idChar;
     }
     
 }
@@ -332,12 +342,12 @@ int main() {
 	
 	Level level = {0};
 	if(generateLevel(&level, 0) != 0) return -1;
-    
-	printBoard(level.board);
 
 #if DEBUG
-	debug_drawRoomIds(level.board, level.subRoomList, N_SUBROOMS);
+	debug_drawRoomIds(&level);
 #endif
+    
+	printBoard(level.board);
 	
 #if DEBUG
     end = clock();
